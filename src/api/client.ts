@@ -1,7 +1,8 @@
 import axios from "axios";
 
-export const SERVER_URL =
-  "https://driverhelp.167.71.231.64.nip.io";
+// export const SERVER_URL =
+//   "https://driverhelp.167.71.231.64.nip.io";
+  export const SERVER_URL = "http://localhost:9000"
 
 export const API_BASE_URL =
   `${SERVER_URL}/api`;

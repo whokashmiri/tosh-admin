@@ -11,12 +11,12 @@ import type {
   DriverLiveLocationUpdate,
 } from "../types/location";
 
-const SOCKET_URL =
-  "https://driverhelp.167.71.231.64.nip.io";
+// const SOCKET_URL =
+//   "https://driverhelp.167.71.231.64.nip.io";
 
 // Local:
-// const SOCKET_URL =
-//   "http://localhost:9000";
+const SOCKET_URL =
+  "http://localhost:9000";
 
 let socket:
   Socket | null =

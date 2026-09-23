@@ -69,14 +69,13 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  name:
-    string;
+  name: string;
 
-  iqamaId:
-    string;
+  iqamaId: string;
 
-  password:
-    string;
+  password: string;
+
+  role: "admin" | "supervisor";
 }
 
 export interface AuthResponse {

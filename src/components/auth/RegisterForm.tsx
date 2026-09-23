@@ -5,11 +5,13 @@ import {
 
 import {
   ArrowLeft,
+  ChevronDown,
   Eye,
   EyeOff,
   Languages,
   Loader2,
   LockKeyhole,
+  Shield,
   ShieldCheck,
   UserPlus,
   UserRound,
@@ -88,6 +90,13 @@ export function RegisterForm() {
     iqamaId,
     setIqamaId,
   ] = useState("");
+
+  const [
+  role,
+  setRole,
+] = useState<
+  "admin" | "supervisor"
+>("supervisor");
 
   const [
     password,
@@ -171,6 +180,20 @@ export function RegisterForm() {
     }
 
     if (
+  role !== "admin" &&
+  role !== "supervisor"
+) {
+  setError(
+    t(
+      "auth.roleRequired",
+      "Please select an account role",
+    ),
+  );
+
+  return;
+}
+
+    if (
       password.length < 6
     ) {
       setError(
@@ -209,11 +232,13 @@ export function RegisterForm() {
       await register({
         name:
           cleanName,
+        
 
         iqamaId:
           cleanIqamaId,
 
         password,
+        role
       });
 
       setSuccess(
@@ -421,6 +446,78 @@ export function RegisterForm() {
           </div>
         </div>
 
+
+        
+
+        {/* ROLE */}
+
+<div>
+  <label
+    htmlFor="role"
+    className="mb-2 block text-xs font-bold text-[#07393C]"
+  >
+    {t(
+      "auth.role",
+      "Account Role",
+    )}
+  </label>
+
+  <div className="group relative">
+    <Shield
+      size={17}
+      className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-[#667577] transition group-focus-within:text-[#07393C] rtl:left-auto rtl:right-4"
+    />
+
+    <select
+      id="role"
+      value={role}
+      onChange={(event) => {
+        setRole(
+          event.target.value as
+            | "admin"
+            | "supervisor",
+        );
+
+        setError(null);
+
+        setSuccess(null);
+      }}
+      className="h-12 w-full appearance-none rounded-xl border border-[#CAD4D4] bg-white pl-11 pr-11 text-sm font-medium text-[#0A090C] outline-none transition focus:border-[#07393C] focus:ring-4 focus:ring-[#07393C]/10 rtl:pl-11 rtl:pr-11"
+    >
+      <option value="supervisor">
+        {t(
+          "auth.supervisor",
+          "Supervisor",
+        )}
+      </option>
+
+      <option value="admin">
+        {t(
+          "auth.admin",
+          "Administrator",
+        )}
+      </option>
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#667577] rtl:left-4 rtl:right-auto"
+    />
+  </div>
+
+  <p className="mt-1.5 text-[10px] leading-4 text-[#8A989A]">
+    {role === "admin"
+      ? t(
+          "auth.adminRoleDescription",
+          "Administrators have full management access.",
+        )
+      : t(
+          "auth.supervisorRoleDescription",
+          "Supervisors manage drivers, orders and live operations.",
+        )}
+  </p>
+</div>
+
         {/* PASSWORD */}
 
         <PasswordInput
@@ -461,6 +558,7 @@ export function RegisterForm() {
             "Enter password",
           )}
         />
+
 
         {/* CONFIRM PASSWORD */}
 
