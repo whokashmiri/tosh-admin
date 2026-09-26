@@ -52,7 +52,7 @@ import type {
 } from "../types/location";
 
 const MAP_STYLE =
-  "https://tiles.openfreemap.org/styles/liberty";
+  "https://tiles.openfreemap.org/styles/bright";
 
 const DEFAULT_LATITUDE =
   24.7136;
@@ -664,30 +664,32 @@ export default function LiveLocationPage() {
           {loading ? (
             <div className="h-162.5 animate-pulse rounded-2xl border border-[#D6DEDE] bg-white" />
           ) : (
-            <section className="grid min-h-162.5 overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm xl:grid-cols-[1fr_340px]">
+           <section className="grid h-[calc(100vh-260px)] min-h-150 max-h-212.5 overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm xl:grid-cols-[minmax(0,1fr)_340px]">
               {/* MAP */}
 
-              <div className="relative min-h-125">
-                <MapLibreMap
-                  {...viewState}
-                  onMove={(
-                    event,
-                  ) =>
-                    setViewState(
-                      event.viewState,
-                    )
-                  }
-                  mapStyle={
-                    MAP_STYLE
-                  }
-                  style={{
-                    width:
-                      "100%",
+             <div className="relative h-full min-h-0 overflow-hidden">
+             <MapLibreMap
+  {...viewState}
+  onMove={(event) =>
+    setViewState({
+      longitude:
+        event.viewState.longitude,
 
-                    height:
-                      "100%",
-                  }}
-                >
+      latitude:
+        event.viewState.latitude,
+
+      zoom:
+        event.viewState.zoom,
+    })
+  }
+  mapStyle={MAP_STYLE}
+  style={{
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+  }}
+>
                   <NavigationControl
                     position="top-left"
                   />

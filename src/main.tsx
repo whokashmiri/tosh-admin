@@ -1,5 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./maplibre";
+
+import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
   BrowserRouter,
