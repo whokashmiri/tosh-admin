@@ -662,12 +662,12 @@ export default function LiveLocationPage() {
           )}
 
           {loading ? (
-            <div className="h-[650px] animate-pulse rounded-2xl border border-[#D6DEDE] bg-white" />
+            <div className="h-162.5 animate-pulse rounded-2xl border border-[#D6DEDE] bg-white" />
           ) : (
-            <section className="grid min-h-[650px] overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm xl:grid-cols-[1fr_340px]">
+            <section className="grid min-h-162.5 overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm xl:grid-cols-[1fr_340px]">
               {/* MAP */}
 
-              <div className="relative min-h-[500px]">
+              <div className="relative min-h-125">
                 <MapLibreMap
                   {...viewState}
                   onMove={(
