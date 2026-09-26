@@ -9,35 +9,35 @@ import type {
   UpdateDriverStatusResponse,
 } from "../types/driver";
 
-function getImageFileName(uri: string) {
-  const cleanUri = uri.split("?")[0];
+// function getImageFileName(uri: string) {
+//   const cleanUri = uri.split("?")[0];
 
-  const name = cleanUri.split("/").pop();
+//   const name = cleanUri.split("/").pop();
 
-  return name || `profile-${Date.now()}.jpg`;
-}
+//   return name || `profile-${Date.now()}.jpg`;
+// }
 
-function getImageMimeType(uri: string) {
-  const cleanUri = uri.split("?")[0].toLowerCase();
+// function getImageMimeType(uri: string) {
+//   const cleanUri = uri.split("?")[0].toLowerCase();
 
-  if (cleanUri.endsWith(".png")) {
-    return "image/png";
-  }
+//   if (cleanUri.endsWith(".png")) {
+//     return "image/png";
+//   }
 
-  if (cleanUri.endsWith(".webp")) {
-    return "image/webp";
-  }
+//   if (cleanUri.endsWith(".webp")) {
+//     return "image/webp";
+//   }
 
-  if (cleanUri.endsWith(".heic")) {
-    return "image/heic";
-  }
+//   if (cleanUri.endsWith(".heic")) {
+//     return "image/heic";
+//   }
 
-  if (cleanUri.endsWith(".heif")) {
-    return "image/heif";
-  }
+//   if (cleanUri.endsWith(".heif")) {
+//     return "image/heif";
+//   }
 
-  return "image/jpeg";
-}
+//   return "image/jpeg";
+// }
 
 function appendProfilePicture(
   formData: FormData,

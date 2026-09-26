@@ -6,6 +6,9 @@ import {
 
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
+import DriversPage from "./pages/DriversPage";
+import LiveLocationPage from "./pages/LiveLocationPage";
 
 export default function App() {
   return (
@@ -29,21 +32,33 @@ export default function App() {
 
       <Route
         path="/dashboard"
-        element={
-          <div>
-            Supervisor Dashboard
-          </div>
+       
+          element={
+          <DashboardPage />
         }
+        
       />
 
       <Route
+        // path="/admin"
         path="/admin"
         element={
-          <div>
-            Admin Dashboard
-          </div>
+          <DashboardPage />
         }
       />
+      <Route
+  path="/dashboard/drivers"
+  element={
+    <DriversPage />
+  }
+/>
+
+<Route
+  path="/dashboard/live-location"
+  element={
+    <LiveLocationPage />
+  }
+/>
       <Route
   path="/admin-alshahrani"
   element={
