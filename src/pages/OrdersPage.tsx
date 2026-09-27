@@ -966,10 +966,10 @@ export default function OrdersPage() {
                       </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody >
                       {visibleOrders.map(
                         (order) => (
-                          <OrderTableRow
+                          <OrderTableRow 
                             key={
                               order._id
                             }
@@ -1428,7 +1428,7 @@ function TableCell({
     ReactNode;
 }) {
   return (
-    <td className="px-5 py-4 text-xs text-[#667577]">
+    <td className="px-3 py-2 text-xs text-[#667577]">
       {children}
     </td>
   );
@@ -1436,14 +1436,14 @@ function TableCell({
 
 function TableLoading() {
   return (
-    <div className="space-y-2 p-5">
+    <div className=" space-y-2 p-5">
       {Array.from({
         length: 7,
       }).map(
         (_, index) => (
           <div
             key={index}
-            className="h-14 animate-pulse rounded-xl bg-[#F0EDEE]"
+            className="h-14 animate-pulse rounded-xl bg-[#F0EDEE] "
           />
         ),
       )}
