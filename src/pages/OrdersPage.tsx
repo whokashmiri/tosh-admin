@@ -933,7 +933,7 @@ export default function OrdersPage() {
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[950px]">
+                  <table className="w-full min-w-237.5">
                     <thead>
                       <tr className="border-b border-[#EDF0F0] bg-[#F8FAFA] text-left">
                         <TableHead>

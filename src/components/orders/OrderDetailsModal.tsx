@@ -304,7 +304,7 @@ export function OrderDetailsModal({
                 Order Notes
               </div>
 
-              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[#667577]">
+              <p className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-[#667577]">
                 {order.notes}
               </p>
             </section>
@@ -325,7 +325,7 @@ export function OrderDetailsModal({
               SYSTEM INFORMATION
           ========================= */}
 
-          <section className="border-t border-[#EDF0F0] pt-5">
+          {/* <section className="border-t border-[#EDF0F0] pt-5">
             <h3 className="mb-4 text-xs font-black uppercase tracking-wide text-[#667577]">
               Order Information
             </h3>
@@ -372,7 +372,7 @@ export function OrderDetailsModal({
                 }
               />
             </div>
-          </section>
+          </section> */}
         </div>
       </div>
     </div>
@@ -466,7 +466,7 @@ function OrderPhoto({
             className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
           />
 
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-3 pt-8 opacity-0 transition group-hover:opacity-100">
+          <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent px-4 pb-3 pt-8 opacity-0 transition group-hover:opacity-100">
             <span className="text-xs font-bold text-white">
               Open full image
             </span>
@@ -636,7 +636,7 @@ function CancellationSection({
             Cancellation Notes
           </div>
 
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-red-700/80">
+          <p className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-red-700/80">
             {
               order.cancellationNotes
             }
@@ -768,7 +768,7 @@ function InfoCard({
         {label}
       </div>
 
-      <div className="mt-2 break-words text-sm font-black text-[#07393C]">
+      <div className="mt-2 wrap-break-word text-sm font-black text-[#07393C]">
         {value ??
           "--"}
       </div>
@@ -780,26 +780,26 @@ function InfoCard({
    SMALL INFO
 ========================================================= */
 
-function SmallInfo({
-  label,
-  value,
-}: {
-  label: string;
+// function SmallInfo({
+//   label,
+//   value,
+// }: {
+//   label: string;
 
-  value: string;
-}) {
-  return (
-    <div>
-      <div className="text-[9px] font-bold uppercase tracking-wide text-[#8A989A]">
-        {label}
-      </div>
+//   value: string;
+// }) {
+//   return (
+//     <div>
+//       <div className="text-[9px] font-bold uppercase tracking-wide text-[#8A989A]">
+//         {label}
+//       </div>
 
-      <div className="mt-1 break-all text-xs font-semibold text-[#07393C]">
-        {value}
-      </div>
-    </div>
-  );
-}
+//       <div className="mt-1 break-all text-xs font-semibold text-[#07393C]">
+//         {value}
+//       </div>
+//     </div>
+//   );
+// }
 
 /* =========================================================
    STATUS
