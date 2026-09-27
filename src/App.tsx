@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import DriversPage from "./pages/DriversPage";
 import LiveLocationPage from "./pages/LiveLocationPage";
+import OrdersPage from "./pages/OrdersPage";
 
 export default function App() {
   return (
@@ -58,6 +59,11 @@ export default function App() {
   element={
     <LiveLocationPage />
   }
+/>
+
+<Route
+  path="/dashboard/orders"
+  element={<OrdersPage />}
 />
       <Route
   path="/admin-alshahrani"
