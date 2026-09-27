@@ -433,12 +433,12 @@ export default function OrdersPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className="mx-auto max-w-[1600px] p-5 lg:p-8">
+        <main className=" max-w-full p-2 lg:p-8">
           {/* =========================
               HEADER
           ========================= */}
 
-          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="mb-1 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-black text-[#07393C]">
                 Orders
@@ -478,7 +478,7 @@ export default function OrdersPage() {
               SUMMARY
           ========================= */}
 
-          <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="mb-1 grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
             <OrderStat
               label="Active Orders"
               value={
@@ -535,14 +535,14 @@ export default function OrdersPage() {
           {!loadingInitial &&
             activeOrders.length >
               0 && (
-              <section className="mb-6 overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-[#EDF0F0] px-5 py-4">
-                  <div>
+              <section className="mb-1 overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#EDF0F0] px-3 py-3">
+                  <div className="flex  flex-row gap-5 border-[#EDF0F0]">
                     <h2 className="text-sm font-black text-[#07393C]">
                       Active Deliveries
                     </h2>
 
-                    <p className="mt-1 text-xs text-[#667577]">
+                    <p className=" text-xs text-[#667577]">
                       Orders currently
                       being delivered
                     </p>
@@ -582,8 +582,8 @@ export default function OrdersPage() {
               FILTERS
           ========================= */}
 
-          <section className="mb-6 rounded-2xl border border-[#D6DEDE] bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
+          <section className="mb-1 rounded-2xl border border-[#D6DEDE] bg-white p-2 shadow-sm">
+            <div className="mb-1 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Filter
                   size={17}
@@ -849,7 +849,7 @@ export default function OrdersPage() {
           ========================= */}
 
           {error && (
-            <div className="mb-5 flex items-start justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <div className="mb-1 flex items-start justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
               <span>
                 {error}
               </span>
@@ -871,13 +871,13 @@ export default function OrdersPage() {
           ========================= */}
 
           <section className="overflow-hidden rounded-2xl border border-[#D6DEDE] bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-[#EDF0F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+            <div className="flex flex-col gap-3 border-b border-[#EDF0F0] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-row gap-3 ">
                 <h2 className="text-sm font-black text-[#07393C]">
                   Order History
                 </h2>
 
-                <p className="mt-1 text-xs text-[#667577]">
+                <p className=" text-xs text-[#667577]">
                   {pagination.total}{" "}
                   total result
                   {pagination.total ===
@@ -1123,17 +1123,17 @@ function ActiveOrderCard({
     <button
       type="button"
       onClick={onView}
-      className="rounded-xl border border-[#DCE4E4] bg-[#FAFCFC] p-4 text-left transition hover:border-[#2C666E] hover:shadow-sm"
+      className="rounded-xl border border-[#DCE4E4] bg-[#FAFCFC] p-2 text-left transition hover:border-[#2C666E] hover:shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex items-start justify-between gap-3">
           <div className="text-sm font-black text-[#07393C]">
             #
             {order.orderId ??
               order._id}
           </div>
 
-          <div className="mt-1 truncate text-xs font-semibold text-[#667577]">
+          <div className="mt-0 truncate text-xs font-semibold text-[#667577]">
             {driver?.shortName ||
               driver?.name ||
               "Driver"}
@@ -1147,7 +1147,7 @@ function ActiveOrderCard({
         />
       </div>
 
-      <div className="mt-4 flex items-center gap-2 text-[10px] text-[#667577]">
+      <div className="mt-1 flex items-center gap-2 text-[10px] text-[#667577]">
         <CalendarDays
           size={12}
         />
@@ -1353,8 +1353,8 @@ function OrderStat({
   icon: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-[#D6DEDE] bg-white p-5 shadow-sm">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EAF4F4] text-[#07393C]">
+    <div className="flex items-center gap-4 rounded-2xl border border-[#D6DEDE] bg-white p-2 shadow-sm">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EAF4F4] text-[#07393C]">
         {icon}
       </div>
 
