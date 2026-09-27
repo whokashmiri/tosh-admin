@@ -26,9 +26,42 @@ let connectingPromise:
   Promise<Socket> | null =
   null;
 
+
+export interface DriverLiveLocationPayload {
+  latitude: number;
+
+  longitude: number;
+
+  accuracy?:
+    | number
+    | null;
+
+  speed?:
+    | number
+    | null;
+
+  heading?:
+    | number
+    | null;
+}
+
+export interface LocationAcknowledgement {
+  success: boolean;
+
+  recordedAt?: string;
+
+  locationId?: string;
+
+  message?: string;
+}
+
+
 export function getSocket() {
   return socket;
 }
+
+
+
 
 function createSocket() {
   if (socket) {
@@ -220,6 +253,77 @@ export function isSocketConnected() {
   );
 }
 
+
+
+export async function emitDriverLocation(
+  payload:
+    DriverLiveLocationPayload,
+) {
+  const instance =
+    await connectSocket();
+
+  return new Promise<LocationAcknowledgement>(
+    (
+      resolve,
+      reject,
+    ) => {
+      const timeoutId =
+        window.setTimeout(
+          () => {
+            reject(
+              new Error(
+                "Location update timed out",
+              ),
+            );
+          },
+          10000,
+        );
+
+      instance.emit(
+        "driver:location:update",
+        payload,
+        (
+          acknowledgement:
+            LocationAcknowledgement,
+        ) => {
+          window.clearTimeout(
+            timeoutId,
+          );
+
+          if (
+            !acknowledgement
+          ) {
+            reject(
+              new Error(
+                "No acknowledgement received",
+              ),
+            );
+
+            return;
+          }
+
+          if (
+            acknowledgement.success ===
+            false
+          ) {
+            reject(
+              new Error(
+                acknowledgement.message ||
+                  "Unable to update location",
+              ),
+            );
+
+            return;
+          }
+
+          resolve(
+            acknowledgement,
+          );
+        },
+      );
+    },
+  );
+}
 /*
  * SUPERVISOR / ADMIN
  *

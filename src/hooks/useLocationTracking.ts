@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-
-import * as Location from "expo-location";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   connectSocket,
@@ -8,183 +11,533 @@ import {
   isSocketConnected,
 } from "../socket/socket";
 
-import { getErrorMessage } from "../utils";
-
 type UseLocationTrackingOptions = {
   enabled: boolean;
 
+  /*
+   * Minimum time between
+   * locations sent to server.
+   */
   intervalMs?: number;
 
+  /*
+   * Minimum movement in meters
+   * before sending another point.
+   */
   distanceInterval?: number;
+};
+
+export type BrowserLocation = {
+  latitude: number;
+
+  longitude: number;
+
+  accuracy:
+    | number
+    | null;
+
+  speed:
+    | number
+    | null;
+
+  heading:
+    | number
+    | null;
+
+  timestamp: number;
 };
 
 export function useLocationTracking({
   enabled,
 
-  /*
-   * Near-live tracking.
-   */
   intervalMs = 3000,
 
   distanceInterval = 3,
 }: UseLocationTrackingOptions) {
-  const [isTracking, setIsTracking] = useState(false);
+  const [
+    isTracking,
+    setIsTracking,
+  ] = useState(false);
 
-  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [
+    permissionGranted,
+    setPermissionGranted,
+  ] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
+  const [
+    error,
+    setError,
+  ] =
+    useState<string | null>(
+      null,
+    );
 
-  const [lastLocation, setLastLocation] =
-    useState<Location.LocationObject | null>(null);
-
-  const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const [
+    lastLocation,
+    setLastLocation,
+  ] =
+    useState<BrowserLocation | null>(
+      null,
+    );
 
   /*
-   * Prevent multiple simultaneous
-   * socket sends if GPS fires faster
-   * than the network acknowledgement.
+   * Browser watchPosition ID.
    */
-  const sendingRef = useRef(false);
+  const watchIdRef =
+    useRef<number | null>(
+      null,
+    );
 
-  const stopTracking = useCallback(() => {
-    subscriptionRef.current?.remove();
+  /*
+   * Prevent overlapping socket
+   * requests.
+   */
+  const sendingRef =
+    useRef(false);
 
-    subscriptionRef.current = null;
+  /*
+   * Used for throttling.
+   */
+  const lastSentAtRef =
+    useRef(0);
 
-    sendingRef.current = false;
+  /*
+   * Used for distance filtering.
+   */
+  const lastSentLocationRef =
+    useRef<BrowserLocation | null>(
+      null,
+    );
 
-    setIsTracking(false);
-  }, []);
+  /*
+   * Prevent async startTracking()
+   * from starting more than once.
+   */
+  const startingRef =
+    useRef(false);
 
-  const sendLocation = useCallback(
-    async (location: Location.LocationObject) => {
-      /*
-       * Don't stack requests.
-       */
-      if (sendingRef.current) {
+  const stopTracking =
+    useCallback(() => {
+      if (
+        watchIdRef.current !==
+        null
+      ) {
+        navigator.geolocation.clearWatch(
+          watchIdRef.current,
+        );
+
+        watchIdRef.current =
+          null;
+      }
+
+      sendingRef.current =
+        false;
+
+      startingRef.current =
+        false;
+
+      lastSentAtRef.current =
+        0;
+
+      lastSentLocationRef.current =
+        null;
+
+      setIsTracking(
+        false,
+      );
+    }, []);
+
+  /*
+   * Determines whether a location
+   * should actually be sent.
+   *
+   * Browser GPS can fire more often
+   * than requested, so we enforce
+   * time/distance ourselves.
+   */
+  const shouldSendLocation =
+    useCallback(
+      (
+        location:
+          BrowserLocation,
+      ) => {
+        const now =
+          Date.now();
+
+        const previous =
+          lastSentLocationRef.current;
+
+        /*
+         * Always send first point.
+         */
+        if (!previous) {
+          return true;
+        }
+
+        const elapsed =
+          now -
+          lastSentAtRef.current;
+
+        const distance =
+          calculateDistanceMeters(
+            previous.latitude,
+            previous.longitude,
+            location.latitude,
+            location.longitude,
+          );
+
+        /*
+         * Send if enough time passed
+         * OR driver moved enough.
+         */
+        return (
+          elapsed >=
+            intervalMs ||
+          distance >=
+            distanceInterval
+        );
+      },
+      [
+        intervalMs,
+        distanceInterval,
+      ],
+    );
+
+  const sendLocation =
+    useCallback(
+      async (
+        location:
+          BrowserLocation,
+      ) => {
+        /*
+         * Avoid stacked socket
+         * acknowledgements.
+         */
+        if (
+          sendingRef.current
+        ) {
+          return;
+        }
+
+        if (
+          !shouldSendLocation(
+            location,
+          )
+        ) {
+          return;
+        }
+
+        sendingRef.current =
+          true;
+
+        try {
+          if (
+            !isSocketConnected()
+          ) {
+            await connectSocket();
+          }
+
+          await emitDriverLocation({
+            latitude:
+              location.latitude,
+
+            longitude:
+              location.longitude,
+
+            accuracy:
+              location.accuracy,
+
+            speed:
+              location.speed,
+
+            heading:
+              location.heading,
+          });
+
+          lastSentAtRef.current =
+            Date.now();
+
+          lastSentLocationRef.current =
+            location;
+
+          setError(null);
+        } catch (error) {
+          setError(
+            getLocationErrorMessage(
+              error,
+              "Unable to send location",
+            ),
+          );
+        } finally {
+          sendingRef.current =
+            false;
+        }
+      },
+      [
+        shouldSendLocation,
+      ],
+    );
+
+  const handlePosition =
+    useCallback(
+      (
+        position:
+          GeolocationPosition,
+      ) => {
+        const location:
+          BrowserLocation = {
+          latitude:
+            position.coords
+              .latitude,
+
+          longitude:
+            position.coords
+              .longitude,
+
+          accuracy:
+            Number.isFinite(
+              position.coords
+                .accuracy,
+            )
+              ? position.coords
+                  .accuracy
+              : null,
+
+          speed:
+            position.coords
+              .speed != null &&
+            Number.isFinite(
+              position.coords
+                .speed,
+            )
+              ? position.coords
+                  .speed
+              : null,
+
+          heading:
+            position.coords
+              .heading != null &&
+            Number.isFinite(
+              position.coords
+                .heading,
+            )
+              ? position.coords
+                  .heading
+              : null,
+
+          timestamp:
+            position.timestamp,
+        };
+
+        /*
+         * UI gets every browser
+         * location update.
+         */
+        setLastLocation(
+          location,
+        );
+
+        /*
+         * Server sending is
+         * independently throttled.
+         */
+        void sendLocation(
+          location,
+        );
+      },
+      [
+        sendLocation,
+      ],
+    );
+
+  const handlePositionError =
+    useCallback(
+      (
+        positionError:
+          GeolocationPositionError,
+      ) => {
+        switch (
+          positionError.code
+        ) {
+          case positionError.PERMISSION_DENIED:
+            setPermissionGranted(
+              false,
+            );
+
+            setError(
+              "Location permission was denied. Allow location access in your browser settings.",
+            );
+
+            break;
+
+          case positionError.POSITION_UNAVAILABLE:
+            setError(
+              "Your current location is unavailable.",
+            );
+
+            break;
+
+          case positionError.TIMEOUT:
+            setError(
+              "Location request timed out.",
+            );
+
+            break;
+
+          default:
+            setError(
+              positionError.message ||
+                "Unable to get location",
+            );
+        }
+      },
+      [],
+    );
+
+  const startTracking =
+    useCallback(async () => {
+      if (
+        watchIdRef.current !==
+          null ||
+        startingRef.current
+      ) {
         return;
       }
 
-      sendingRef.current = true;
+      if (
+        !("geolocation" in
+          navigator)
+      ) {
+        setError(
+          "Location tracking is not supported by this browser.",
+        );
+
+        setPermissionGranted(
+          false,
+        );
+
+        return;
+      }
+
+      startingRef.current =
+        true;
 
       try {
+        setError(null);
+
         /*
-         * Socket may temporarily
-         * disconnect because of
-         * network changes.
+         * Connect socket first.
          */
-        if (!isSocketConnected()) {
+        if (
+          !isSocketConnected()
+        ) {
           await connectSocket();
         }
 
-        await emitDriverLocation({
-          latitude: location.coords.latitude,
+        /*
+         * getCurrentPosition triggers
+         * browser permission request.
+         */
+        navigator.geolocation.getCurrentPosition(
+          (
+            position,
+          ) => {
+            setPermissionGranted(
+              true,
+            );
 
-          longitude: location.coords.longitude,
+            handlePosition(
+              position,
+            );
+          },
 
-          accuracy: location.coords.accuracy,
+          (
+            positionError,
+          ) => {
+            handlePositionError(
+              positionError,
+            );
+          },
 
-          speed: location.coords.speed,
+          {
+            enableHighAccuracy:
+              true,
 
-          heading: location.coords.heading,
-        });
+            timeout:
+              15000,
+
+            maximumAge:
+              0,
+          },
+        );
 
         /*
-         * Clear previous transient
-         * socket/location error once
-         * sending works again.
+         * Start continuous browser
+         * location tracking.
          */
-        setError(null);
-      } catch (err) {
-        setError(getErrorMessage(err, "Unable to send location"));
+        const watchId =
+          navigator.geolocation.watchPosition(
+            (
+              position,
+            ) => {
+              setPermissionGranted(
+                true,
+              );
+
+              handlePosition(
+                position,
+              );
+            },
+
+            (
+              positionError,
+            ) => {
+              handlePositionError(
+                positionError,
+              );
+            },
+
+            {
+              enableHighAccuracy:
+                true,
+
+              timeout:
+                20000,
+
+              /*
+               * Don't reuse an old
+               * cached location.
+               */
+              maximumAge:
+                0,
+            },
+          );
+
+        watchIdRef.current =
+          watchId;
+
+        setIsTracking(
+          true,
+        );
+      } catch (error) {
+        setError(
+          getLocationErrorMessage(
+            error,
+            "Unable to start location tracking",
+          ),
+        );
+
+        setIsTracking(
+          false,
+        );
       } finally {
-        sendingRef.current = false;
+        startingRef.current =
+          false;
       }
-    },
-    [],
-  );
-
-  const startTracking = useCallback(async () => {
-    try {
-      if (subscriptionRef.current) {
-        return;
-      }
-
-      setError(null);
-
-      const permission = await Location.requestForegroundPermissionsAsync();
-
-      if (permission.status !== "granted") {
-        setPermissionGranted(false);
-
-        setError("Location permission is required");
-
-        return;
-      }
-
-      setPermissionGranted(true);
-
-      /*
-       * Make sure Socket.IO is
-       * available before GPS starts.
-       */
-      if (!isSocketConnected()) {
-        await connectSocket();
-      }
-
-      /*
-       * Send one position immediately
-       * instead of waiting for the
-       * first watch callback.
-       */
-      try {
-        const initialLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-
-        setLastLocation(initialLocation);
-
-        void sendLocation(initialLocation);
-      } catch {
-        /*
-         * watchPositionAsync below
-         * can still provide location.
-         */
-      }
-
-      const subscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-
-          timeInterval: intervalMs,
-
-          distanceInterval,
-        },
-
-        (location) => {
-          /*
-           * Update local UI
-           * immediately.
-           */
-          setLastLocation(location);
-
-          /*
-           * Do not block Expo's
-           * GPS callback.
-           */
-          void sendLocation(location);
-        },
-      );
-
-      subscriptionRef.current = subscription;
-
-      setIsTracking(true);
-    } catch (err) {
-      setError(getErrorMessage(err, "Unable to start location tracking"));
-
-      setIsTracking(false);
-    }
-  }, [intervalMs, distanceInterval, sendLocation]);
+    }, [
+      handlePosition,
+      handlePositionError,
+    ]);
 
   useEffect(() => {
     if (enabled) {
@@ -196,7 +549,11 @@ export function useLocationTracking({
     return () => {
       stopTracking();
     };
-  }, [enabled, startTracking, stopTracking]);
+  }, [
+    enabled,
+    startTracking,
+    stopTracking,
+  ]);
 
   return {
     isTracking,
@@ -211,4 +568,106 @@ export function useLocationTracking({
 
     stopTracking,
   };
+}
+
+/*
+ * Haversine distance.
+ *
+ * Returns distance between two GPS
+ * coordinates in meters.
+ */
+function calculateDistanceMeters(
+  latitude1: number,
+  longitude1: number,
+  latitude2: number,
+  longitude2: number,
+) {
+  const earthRadius =
+    6371000;
+
+  const latitudeDifference =
+    degreesToRadians(
+      latitude2 -
+        latitude1,
+    );
+
+  const longitudeDifference =
+    degreesToRadians(
+      longitude2 -
+        longitude1,
+    );
+
+  const firstLatitude =
+    degreesToRadians(
+      latitude1,
+    );
+
+  const secondLatitude =
+    degreesToRadians(
+      latitude2,
+    );
+
+  const a =
+    Math.sin(
+      latitudeDifference /
+        2,
+    ) **
+      2 +
+    Math.cos(
+      firstLatitude,
+    ) *
+      Math.cos(
+        secondLatitude,
+      ) *
+      Math.sin(
+        longitudeDifference /
+          2,
+      ) **
+        2;
+
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(
+        1 - a,
+      ),
+    );
+
+  return (
+    earthRadius *
+    c
+  );
+}
+
+function degreesToRadians(
+  value: number,
+) {
+  return (
+    value *
+    (Math.PI / 180)
+  );
+}
+
+function getLocationErrorMessage(
+  error: unknown,
+  fallback: string,
+) {
+  if (
+    error instanceof Error
+  ) {
+    return (
+      error.message ||
+      fallback
+    );
+  }
+
+  if (
+    typeof error ===
+      "string"
+  ) {
+    return error;
+  }
+
+  return fallback;
 }
