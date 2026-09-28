@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import DriversPage from "./pages/DriversPage";
 import LiveLocationPage from "./pages/LiveLocationPage";
 import OrdersPage from "./pages/OrdersPage";
+import StatsPage from "./pages/StatsPage";
 
 export default function App() {
   return (
@@ -39,6 +40,11 @@ export default function App() {
         }
         
       />
+
+      <Route
+  path="/dashboard/stats"
+  element={<StatsPage />}
+/>
 
       <Route
         // path="/admin"
