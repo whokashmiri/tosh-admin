@@ -119,7 +119,7 @@ export function LoginForm() {
           </div>
 
           <span className="text-lg font-black tracking-[0.18em] text-[#07393C]">
-            TOSH
+            Spark Go
           </span>
         </div>
 

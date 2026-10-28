@@ -47,11 +47,11 @@ const items: SidebarItem[] = [
     icon: <Users size={18} />,
     path: "/dashboard/orders",
   },
-  {
-    label: "Filter",
-    icon: <Filter size={18} />,
-    path: "/dashboard/filter",
-  },
+  // {
+  //   label: "Filter",
+  //   icon: <Filter size={18} />,
+  //   path: "/dashboard/filter",
+  // },
 ];
 
 export function DashboardSidebar() {
@@ -85,7 +85,7 @@ export function DashboardSidebar() {
 
         <div className="ml-3">
           <div className="text-lg font-black tracking-[0.18em]">
-            TOSH
+            Spark Go
           </div>
 
           <div className="text-[10px] text-white/50">

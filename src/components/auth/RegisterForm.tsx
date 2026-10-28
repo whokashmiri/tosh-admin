@@ -335,7 +335,7 @@ export function RegisterForm() {
         <p className="mt-3 max-w-sm text-sm leading-6 text-[#667577]">
           {t(
             "auth.createAccountDescription",
-            "Create a management account for the TOSH operations platform.",
+            "Create a management account for the  Spark Go operations platform.",
           )}
         </p>
       </div>
