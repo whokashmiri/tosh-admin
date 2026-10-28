@@ -24,7 +24,7 @@ export function AuthBrandPanel() {
 
           <div>
             <div className="text-xl font-black tracking-[0.24em]">
-              TOSH
+              Spark Go
             </div>
 
             <div className="mt-0.5 text-xs text-white/60">
