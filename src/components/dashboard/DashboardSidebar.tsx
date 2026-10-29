@@ -1,6 +1,6 @@
 import {
   BarChart3,
-  Filter,
+  // Filter,
   Home,
   MapPinned,
   Users,
@@ -79,9 +79,7 @@ export function DashboardSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[#D6DEDE] bg-[#07393C] text-white lg:flex">
       <div className="flex h-20 items-center border-b border-white/10 px-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-lg font-black">
-          T
-        </div>
+       
 
         <div className="ml-3">
           <div className="text-lg font-black tracking-[0.18em]">

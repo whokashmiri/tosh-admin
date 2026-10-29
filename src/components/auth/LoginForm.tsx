@@ -115,7 +115,7 @@ export function LoginForm() {
       <div className="mb-10 flex items-center justify-between lg:justify-end">
         <div className="flex items-center gap-2 lg:hidden">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#07393C] text-sm font-black text-white">
-            T
+            SG
           </div>
 
           <span className="text-lg font-black tracking-[0.18em] text-[#07393C]">
