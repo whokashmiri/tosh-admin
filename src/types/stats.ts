@@ -195,3 +195,37 @@ export interface SupervisorRangeStatsResponse {
     totalHours: number;
   };
 }
+
+
+
+export interface SupervisorDashboardDriverItem {
+  driver: {
+    _id: string;
+    name: string;
+    shortName?: string | null;
+    iqamaId: string;
+    phone?: string | null;
+    isActive: boolean;
+    profilePicture?: {
+      url: string | null;
+      publicId?: string | null;
+    } | null;
+  };
+
+  orders: {
+    deliveredToday: number;
+    deliveredThisMonth: number;
+  };
+
+  todayWork: {
+    firstShiftStartedAt: string | null;
+    lastShiftEndedAt: string | null;
+    totalSeconds: number;
+    totalHours: number;
+    workingNow: boolean;
+  };
+}
+
+export interface SupervisorDriversDashboardResponse {
+  drivers: SupervisorDashboardDriverItem[];
+}

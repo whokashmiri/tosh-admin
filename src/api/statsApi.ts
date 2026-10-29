@@ -5,6 +5,7 @@ import {
   type StatsPeriod,
   type SupervisorDashboardStatsResponse,
   type SupervisorRangeStatsResponse,
+   type SupervisorDriversDashboardResponse,
 } from "../types/stats";
 
 import { api } from "./client";
@@ -80,6 +81,16 @@ export async function getDriverStats(
           period,
         },
       },
+    );
+
+  return response.data;
+}
+
+export async function getSupervisorDriversDashboard():
+  Promise<SupervisorDriversDashboardResponse> {
+  const response =
+    await api.get<SupervisorDriversDashboardResponse>(
+      "/stats/drivers-dashboard",
     );
 
   return response.data;
