@@ -1,342 +1,269 @@
+
 import {
   io,
-  Socket,
+  type Socket,
 } from "socket.io-client";
 
-import {
-  getToken,
-} from "../api/client";
+import { getToken } from "../api/client";
 
 import type {
+  DriverLiveLocationPayload,
   DriverLiveLocationUpdate,
+  LocationAcknowledgement,
 } from "../types/location";
 
 const SOCKET_URL =
   "https://driverhelp.167.71.231.64.nip.io";
 
-// Local:
-// const SOCKET_URL =
-//   "http://localhost:9000";
+let socket: Socket | null = null;
 
-let socket:
-  Socket | null =
-  null;
+let connectingPromise: Promise<Socket> | null = null;
 
-let connectingPromise:
-  Promise<Socket> | null =
-  null;
+const ACK_TIMEOUT_MS = 10000;
 
-
-export interface DriverLiveLocationPayload {
-  latitude: number;
-
-  longitude: number;
-
-  accuracy?:
-    | number
-    | null;
-
-  speed?:
-    | number
-    | null;
-
-  heading?:
-    | number
-    | null;
-}
-
-export interface LocationAcknowledgement {
-  success: boolean;
-
-  recordedAt?: string;
-
-  locationId?: string;
-
-  message?: string;
-}
-
-
-export function getSocket() {
-  return socket;
-}
-
-
-
-
-function createSocket() {
+function createSocket(): Socket {
   if (socket) {
     return socket;
   }
 
-  socket = io(
-    SOCKET_URL,
-    {
-      autoConnect: false,
+  const instance = io(SOCKET_URL, {
+    autoConnect: false,
 
-      transports: [
-        "websocket",
-      ],
+    transports: ["websocket"],
 
-      reconnection: true,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
 
-      reconnectionAttempts:
-        Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
 
-      reconnectionDelay:
-        1000,
+    timeout: 20000,
+  });
 
-      reconnectionDelayMax:
-        5000,
+  instance.on("connect", () => {
+    console.log("[Socket] Connected:", instance.id);
+  });
 
-      timeout:
-        20000,
-    },
-  );
+  instance.on("connect_error", (error: Error) => {
+    console.warn(
+      "[Socket] Connection error:",
+      error.message,
+    );
+  });
 
-  socket.on(
-    "connect",
-    () => {
-      console.log(
-        "[Socket] Connected:",
-        socket?.id,
-      );
-    },
-  );
+  instance.on("disconnect", (reason: string) => {
+    console.log("[Socket] Disconnected:", reason);
+  });
 
-  socket.on(
-    "connect_error",
-    (error) => {
-      console.warn(
-        "[Socket] Connect error:",
-        error.message,
-      );
-    },
-  );
+  instance.io.on("reconnect", (attempt: number) => {
+    console.log("[Socket] Reconnected:", attempt);
+  });
 
-  socket.on(
-    "disconnect",
-    (reason) => {
-      console.log(
-        "[Socket] Disconnected:",
-        reason,
-      );
-    },
-  );
+  /*
+   * Read the current token on every connection,
+   * including automatic reconnection.
+   */
+  instance.io.on("reconnect_attempt", () => {
+    void Promise.resolve(getToken())
+      .then((token) => {
+        if (token) {
+          instance.auth = { token };
+        } else {
+          // Do not reconnect with expired account credentials.
+          instance.disconnect();
+        }
+      })
+      .catch(() => {
+        instance.disconnect();
+      });
+  });
 
-  socket.io.on(
-    "reconnect",
-    (attempt) => {
-      console.log(
-        "[Socket] Reconnected:",
-        attempt,
-      );
-    },
-  );
+  socket = instance;
 
+  return instance;
+}
+
+export function getSocket(): Socket | null {
   return socket;
 }
 
-export async function connectSocket() {
-  const instance =
-    createSocket();
+export function isSocketConnected(): boolean {
+  return socket?.connected === true;
+}
 
-  if (
-    instance.connected
-  ) {
-    return instance;
-  }
+/**
+ * Connect using the currently authenticated user.
+ */
+export async function connectSocket(): Promise<Socket> {
+  const instance = createSocket();
 
-  if (
-    connectingPromise
-  ) {
+  if (connectingPromise) {
     return connectingPromise;
   }
 
-  connectingPromise =
-    (async () => {
-      const token =
-        getToken();
+  const pending = (async (): Promise<Socket> => {
+    const token = await Promise.resolve(getToken());
 
-      if (!token) {
-        throw new Error(
-          "Cannot connect socket without authentication token",
-        );
-      }
+    if (!token) {
+      throw new Error(
+        "Cannot connect Socket.IO without an authentication token",
+      );
+    }
 
-      instance.auth = {
-        token,
+    if (instance.connected) {
+      return instance;
+    }
+
+    instance.auth = { token };
+
+    return new Promise<Socket>((resolve, reject) => {
+      let settled = false;
+
+      const finish = (error?: Error) => {
+        if (settled) return;
+
+        settled = true;
+        cleanup();
+
+        if (error) {
+          reject(error);
+        } else {
+          resolve(instance);
+        }
       };
 
-      return new Promise<Socket>(
-        (
-          resolve,
-          reject,
-        ) => {
-          const handleConnect =
-            () => {
-              cleanup();
+      const handleConnect = () => {
+        finish();
+      };
 
-              resolve(
-                instance,
-              );
-            };
+      const handleConnectError = (error: Error) => {
+        finish(error);
+      };
 
-          const handleError =
-            (
-              error:
-                Error,
-            ) => {
-              cleanup();
+      const handleDisconnect = () => {
+        finish(
+          new Error("Socket disconnected before connection completed"),
+        );
+      };
 
-              reject(
-                error,
-              );
-            };
+      const timeout = window.setTimeout(() => {
+        finish(new Error("Socket connection timed out"));
+      }, 25000);
 
-          const cleanup =
-            () => {
-              instance.off(
-                "connect",
-                handleConnect,
-              );
+      const cleanup = () => {
+        window.clearTimeout(timeout);
 
-              instance.off(
-                "connect_error",
-                handleError,
-              );
-            };
+        instance.off("connect", handleConnect);
+        instance.off("connect_error", handleConnectError);
+        instance.off("disconnect", handleDisconnect);
+      };
 
-          instance.once(
-            "connect",
-            handleConnect,
-          );
+      instance.once("connect", handleConnect);
 
-          instance.once(
-            "connect_error",
-            handleError,
-          );
+      instance.once("connect_error", handleConnectError);
 
-          instance.connect();
-        },
-      );
-    })();
+      instance.once("disconnect", handleDisconnect);
+
+      instance.connect();
+    });
+  })();
+
+  connectingPromise = pending;
 
   try {
-    return await connectingPromise;
+    return await pending;
   } finally {
-    connectingPromise =
-      null;
+    if (connectingPromise === pending) {
+      connectingPromise = null;
+    }
   }
 }
 
-export function disconnectSocket() {
-  if (!socket) {
-    return;
-  }
+/**
+ * Disconnect on logout or when changing accounts.
+ *
+ * Do not use this in normal LiveLocation component
+ * cleanup if other screens share the socket.
+ */
+export function disconnectSocket(): void {
+  if (!socket) return;
 
   socket.removeAllListeners();
-
   socket.io.removeAllListeners();
-
   socket.disconnect();
 
   socket = null;
-
-  connectingPromise =
-    null;
+  connectingPromise = null;
 }
 
-export function isSocketConnected() {
-  return (
-    socket?.connected ===
-    true
-  );
-}
-
-
-
+/**
+ * DRIVER -> BACKEND
+ *
+ * Retained for compatibility.
+ *
+ * The current backend listens for:
+ * driver:location
+ */
 export async function emitDriverLocation(
-  payload:
-    DriverLiveLocationPayload,
-) {
-  const instance =
-    await connectSocket();
+  payload: DriverLiveLocationPayload,
+): Promise<LocationAcknowledgement> {
+  const instance = await connectSocket();
 
   return new Promise<LocationAcknowledgement>(
-    (
-      resolve,
-      reject,
-    ) => {
-      const timeoutId =
-        window.setTimeout(
-          () => {
-            reject(
-              new Error(
-                "Location update timed out",
-              ),
-            );
+    (resolve, reject) => {
+      instance
+        .timeout(ACK_TIMEOUT_MS)
+        .emit(
+          "driver:location",
+          payload,
+          (
+            error: Error | null,
+            acknowledgement?: LocationAcknowledgement,
+          ) => {
+            if (error) {
+              reject(
+                new Error("Location update timed out"),
+              );
+              return;
+            }
+
+            if (!acknowledgement) {
+              reject(
+                new Error("No location acknowledgement received"),
+              );
+              return;
+            }
+
+            if (!acknowledgement.success) {
+              reject(
+                new Error(
+                  acknowledgement.message ||
+                    "Unable to update location",
+                ),
+              );
+              return;
+            }
+
+            resolve(acknowledgement);
           },
-          10000,
         );
-
-      instance.emit(
-        "driver:location:update",
-        payload,
-        (
-          acknowledgement:
-            LocationAcknowledgement,
-        ) => {
-          window.clearTimeout(
-            timeoutId,
-          );
-
-          if (
-            !acknowledgement
-          ) {
-            reject(
-              new Error(
-                "No acknowledgement received",
-              ),
-            );
-
-            return;
-          }
-
-          if (
-            acknowledgement.success ===
-            false
-          ) {
-            reject(
-              new Error(
-                acknowledgement.message ||
-                  "Unable to update location",
-              ),
-            );
-
-            return;
-          }
-
-          resolve(
-            acknowledgement,
-          );
-        },
-      );
     },
   );
 }
-/*
- * SUPERVISOR / ADMIN
+
+/**
+ * SUPERVISOR <- BACKEND
  *
- * Receive driver's live location.
+ * Receives accepted live positions from:
+ * - Foreground Socket.IO tracking
+ * - Background HTTP tracking
  */
 export function onDriverLocationUpdate(
   callback: (
-    location:
-      DriverLiveLocationUpdate,
+    update: DriverLiveLocationUpdate,
   ) => void,
-) {
-  const instance =
-    createSocket();
+): () => void {
+  const instance = createSocket();
 
   instance.on(
     "driver:location:update",
@@ -352,63 +279,37 @@ export function onDriverLocationUpdate(
 }
 
 export function onSocketConnect(
-  callback:
-    () => void,
-) {
-  const instance =
-    createSocket();
+  callback: () => void,
+): () => void {
+  const instance = createSocket();
 
-  instance.on(
-    "connect",
-    callback,
-  );
+  instance.on("connect", callback);
 
   return () => {
-    instance.off(
-      "connect",
-      callback,
-    );
+    instance.off("connect", callback);
   };
 }
 
 export function onSocketDisconnect(
-  callback: (
-    reason: string,
-  ) => void,
-) {
-  const instance =
-    createSocket();
+  callback: (reason: string) => void,
+): () => void {
+  const instance = createSocket();
 
-  instance.on(
-    "disconnect",
-    callback,
-  );
+  instance.on("disconnect", callback);
 
   return () => {
-    instance.off(
-      "disconnect",
-      callback,
-    );
+    instance.off("disconnect", callback);
   };
 }
 
 export function onSocketConnectError(
-  callback: (
-    error: Error,
-  ) => void,
-) {
-  const instance =
-    createSocket();
+  callback: (error: Error) => void,
+): () => void {
+  const instance = createSocket();
 
-  instance.on(
-    "connect_error",
-    callback,
-  );
+  instance.on("connect_error", callback);
 
   return () => {
-    instance.off(
-      "connect_error",
-      callback,
-    );
+    instance.off("connect_error", callback);
   };
 }

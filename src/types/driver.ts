@@ -11,6 +11,16 @@ export interface DriverProfilePicture {
   publicId: string | null;
 }
 
+export interface DriverAccommodationLocation {
+  type: "Point";
+  coordinates: [number, number];
+}
+
+
+export interface DriverAccommodation {
+  address?: string | null;
+  location?: DriverAccommodationLocation | null;
+}
 export interface Driver {
   id?: string;
   _id?: string;
@@ -27,11 +37,18 @@ export interface Driver {
 
   vehicleType?: VehicleType | null;
 
+
+  vehiclePlateNumber?: string | null;
+
+  accommodation?: DriverAccommodation | null;
+
   role: "driver";
 
   isActive: boolean;
 
   supervisor?: string | null;
+
+  canDeliverOrders?: boolean;
 
   lastLoginAt?: string | null;
 
@@ -44,32 +61,36 @@ export interface Driver {
 
 export interface CreateDriverPayload {
   iqamaId: string;
-
   name: string;
-
   shortName?: string;
-
   password: string;
-
   phone?: string;
-
   vehicleType: VehicleType;
+
+  vehiclePlateNumber?: string | null;
+
+  accommodation?: DriverAccommodation | null;
 
   profilePictureFile?: File | null;
 }
 
 export interface UpdateDriverPayload {
   name?: string;
-
   shortName?: string | null;
-
   iqamaId?: string;
-
   phone?: string | null;
-
   password?: string;
-
   vehicleType?: VehicleType | null;
+
+  /** null or empty string clears the plate. */
+  vehiclePlateNumber?: string | null;
+
+  /**
+   * undefined = do not update
+   * null = clear accommodation
+   * object = update provided accommodation fields
+   */
+  accommodation?: DriverAccommodation | null;
 
   profilePictureFile?: File | null;
 }

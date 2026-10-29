@@ -79,3 +79,35 @@ export async function getOrderById(
 
   return response.data;
 }
+
+
+export interface SupervisorOrderCalendarResponse {
+  success: boolean;
+  driverId?: string;
+  month?: string;
+  days: Record<string, number>;
+}
+
+/**
+ * Get daily order counts for a driver.
+ *
+ * month format: YYYY-MM
+ * Example: 2026-10
+ */
+export async function getSupervisorOrderCalendar(
+  driverId: string,
+  month: string,
+) {
+  const response =
+    await api.get<SupervisorOrderCalendarResponse>(
+      "/orders/supervisor/calendar",
+      {
+        params: {
+          driverId,
+          month,
+        },
+      },
+    );
+
+  return response.data;
+}

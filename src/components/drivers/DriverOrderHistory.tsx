@@ -242,7 +242,7 @@ export function DriverOrderHistory({
               return (
                 <button key={day} type="button" disabled={disabled} onClick={() => chooseDay(day)}
                   aria-label={`${dateLabel(day)}, ${count} orders`} aria-pressed={selected}
-                  className={`flex min-h-12 flex-col items-center justify-center rounded-lg px-1 py-1 text-xs ${disabled ? "cursor-not-allowed opacity-30" : "hover:bg-[#E5F2F2]"} ${selected ? "bg-[#DDE9EA]" : ""} ${edge ? "!bg-[#07393C] !text-white" : "text-[#07393C]"}`}>
+                  className={`flex min-h-12 flex-col items-center justify-center rounded-lg px-1 py-1 text-xs ${disabled ? "cursor-not-allowed opacity-30" : "hover:bg-[#E5F2F2]"} ${selected ? "bg-[#DDE9EA]" : ""} ${edge ? "bg-[#07393C]! text-white!" : "text-[#07393C]"}`}>
                   <span className="font-bold">{Number(day.slice(-2))}</span>
                   <span className={`mt-1 min-w-5 rounded px-1 text-[9px] ${edge ? "bg-white/20 text-white" : count ? "bg-[#E5F2F2] text-[#07393C]" : "text-[#667577]"}`}>{calendarLoading ? "·" : count}</span>
                 </button>
@@ -274,7 +274,7 @@ export function DriverOrderHistory({
       {preview && (
         <div role="dialog" aria-modal="true" aria-label="Order photo" onClick={() => setPreview(null)}
           className="fixed inset-0 z-100 flex items-center justify-center bg-black/90 p-6">
-          <button type="button" onClick={() => setPreview(null)} aria-label="Close preview" className="absolute end-6 top-6 rounded-full bg-white/15 p-2 text-white"><X size={22}/></button>
+          <button type="button" onClick={() => setPreview(null)} aria-label="Close preview" className="absolute inset-e-6 top-6 rounded-full bg-white/15 p-2 text-white"><X size={22}/></button>
           <img src={preview} alt="Order evidence" onClick={(event) => event.stopPropagation()} className="max-h-[85vh] max-w-full object-contain" />
         </div>
       )}
