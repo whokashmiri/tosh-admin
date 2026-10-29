@@ -253,30 +253,21 @@ export default function DashboardPage() {
                 <StatCard
                   label={t("supervisor.totalDrivers", "Total Drivers")}
                   value={detailedDrivers.length}
-                  helper={t(
-                    "supervisor.totalDriversHelper",
-                    "Drivers assigned to your operation",
-                  )}
+               
                   icon={<Users size={20} />}
                 />
 
                 <StatCard
                   label={t("supervisor.workingNow", "Working Now")}
                   value={workingCount}
-                  helper={t(
-                    "supervisor.activeShiftHelper",
-                    "Drivers with an active shift",
-                  )}
+                
                   icon={<Activity size={20} />}
                 />
 
                 <StatCard
                   label={t("supervisor.deliveredToday", "Delivered Today")}
                   value={stats?.stats.today.orders.delivered ?? 0}
-                  helper={t(
-                    "supervisor.deliveredTodayHelper",
-                    "Completed deliveries today",
-                  )}
+              
                   icon={<PackageCheck size={20} />}
                 />
 
@@ -286,10 +277,7 @@ export default function DashboardPage() {
                     stats?.stats.today.work.totalHours?.toFixed(1) ??
                     "0.0"
                   }
-                  helper={t(
-                    "supervisor.hoursTodayHelper",
-                    "Combined driver working time",
-                  )}
+               
                   icon={<Clock3 size={20} />}
                 />
               </section>
@@ -501,102 +489,98 @@ function DriverRow({
     <button
       type="button"
       onClick={onClick}
-      className="block w-full px-5 py-4 text-start transition hover:bg-[#F8FAFA]"
+      className="block w-full px-5 py-3 text-start transition hover:bg-[#F8FAFA]"
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#D6DEDE] bg-[#F0EDEE]">
-          {driver.profilePicture?.url ? (
-            <img
-              src={driver.profilePicture.url}
-              alt={driver.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="font-black text-[#07393C]">
-              {driver.name?.charAt(0).toUpperCase() || "D"}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 lg:flex-nowrap">
+        {/* Left: identity */}
+        <div className="flex min-w-0 flex-1 items-center gap-3 lg:w-64 lg:flex-none lg:shrink-0">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#D6DEDE] bg-[#F0EDEE]">
+            {driver.profilePicture?.url ? (
+              <img
+                src={driver.profilePicture.url}
+                alt={driver.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="font-black text-[#07393C]">
+                {driver.name?.charAt(0).toUpperCase() || "D"}
+              </span>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-sm font-extrabold text-[#0A090C]">
+                {driver.shortName || driver.name}
+              </span>
+              <ArrowUpRight
+                size={13}
+                className="shrink-0 text-[#8A989A]"
+              />
+            </div>
+
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-[#667577]">
+              <span>{driver.iqamaId}</span>
+
+              {driver.vehicleType && (
+                <span className="flex items-center gap-1 capitalize">
+                  {driver.vehicleType === "car" ? (
+                    <Car size={13} />
+                  ) : driver.vehicleType === "bike" ? (
+                    <Bike size={13} />
+                  ) : null}
+                  {driver.vehicleType}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Middle: status */}
+        <div className="flex shrink-0 flex-col items-center gap-1 lg:w-32">
+          <span
+            className={[
+              "rounded-full px-3 py-1 text-[10px] font-extrabold",
+              workingNow
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-slate-100 text-slate-500",
+            ].join(" ")}
+          >
+            {workingNow
+              ? t("supervisor.workingNow", "Working")
+              : t("supervisor.notWorking", "Not Working")}
+          </span>
+
+          {!driver.isActive && (
+            <span className="rounded-full bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600">
+              {t("common.inactive", "Inactive")}
             </span>
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-extrabold text-[#0A090C]">
-              {driver.shortName || driver.name}
-            </span>
-
-            <ArrowUpRight
-              size={13}
-              className="shrink-0 text-[#8A989A]"
-            />
-          </div>
-
-          <div className="mt-1 text-xs text-[#667577]">
-            {driver.iqamaId}
-          </div>
+        {/* Right: stats */}
+        <div className="grid w-full grid-cols-3 gap-2 sm:grid-cols-5 lg:w-auto lg:flex-1">
+          <DriverMetric
+            label={t("supervisor.deliveredToday", "Today")}
+            value={orders.deliveredToday}
+          />
+          <DriverMetric
+            label={t("supervisor.deliveredMonth", "Month")}
+            value={orders.deliveredThisMonth}
+          />
+          <DriverMetric
+            label={t("supervisor.firstShift", "Start")}
+            value={formatTime(todayWork.firstShiftStartedAt)}
+          />
+          <DriverMetric
+            label={t("supervisor.lastShift", "Finish")}
+            value={formatTime(todayWork.lastShiftEndedAt)}
+          />
+          <DriverMetric
+            label={t("supervisor.totalTime", "Total")}
+            value={formatDuration(todayWork.totalSeconds)}
+          />
         </div>
-
-        <div className="hidden items-center gap-2 text-xs text-[#667577] md:flex">
-          {driver.vehicleType === "car" ? (
-            <Car size={15} />
-          ) : driver.vehicleType === "bike" ? (
-            <Bike size={15} />
-          ) : null}
-
-          <span className="capitalize">
-            {driver.vehicleType || ""}
-          </span>
-        </div>
-
-        <div className="text-center">
-          <div className="text-base font-black text-[#07393C]">
-            {orders.deliveredToday}
-          </div>
-          <div className="text-[10px] text-[#667577]">
-            {t("supervisor.deliveredToday", "Today")}
-          </div>
-        </div>
-
-        <span
-          className={[
-            "rounded-full px-3 py-1 text-[10px] font-extrabold",
-            workingNow
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-slate-100 text-slate-500",
-          ].join(" ")}
-        >
-          {workingNow
-            ? t("supervisor.workingNow", "Working")
-            : t("supervisor.notWorking", "Not Working")}
-        </span>
-
-        {!driver.isActive && (
-          <span className="rounded-full bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600">
-            {t("common.inactive", "Inactive")}
-          </span>
-        )}
-      </div>
-
-      {/* Delivery and work metrics */}
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[#EDF0F0] pt-3 sm:grid-cols-4">
-        <DriverMetric
-          label={t("supervisor.deliveredMonth", "Month")}
-          value={orders.deliveredThisMonth}
-        />
-
-        <DriverMetric
-          label={t("supervisor.firstShift", "Start")}
-          value={formatTime(todayWork.firstShiftStartedAt)}
-        />
-
-        <DriverMetric
-          label={t("supervisor.lastShift", "Finish")}
-          value={formatTime(todayWork.lastShiftEndedAt)}
-        />
-
-        <DriverMetric
-          label={t("supervisor.totalTime", "Total")}
-          value={formatDuration(todayWork.totalSeconds)}
-        />
       </div>
     </button>
   );
@@ -610,12 +594,12 @@ function DriverMetric({
   value: string | number;
 }) {
   return (
-    <div className="min-w-0 rounded-lg bg-[#F8FAFA] px-3 py-2">
-      <div className="text-[10px] font-semibold text-[#667577]">
+    <div className="min-w-0 rounded-lg bg-[#F8FAFA] px-2 py-1.5 text-center">
+      <div className="truncate text-[10px] font-semibold text-[#667577]">
         {label}
       </div>
 
-      <div className="mt-1 truncate text-sm font-black text-[#07393C]">
+      <div className="truncate text-sm font-black text-[#07393C]">
         {value}
       </div>
     </div>
