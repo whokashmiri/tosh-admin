@@ -12,6 +12,8 @@ import MapLibreMap, {
   NavigationControl,
   type MapRef,
 } from "react-map-gl/maplibre";
+import { DriverOrderHistory } from
+  "../components/drivers/DriverOrderHistory";
 
 import {
   Bike,
@@ -27,7 +29,6 @@ import {
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 import { getMyDriversLocations } from "../api/locationApi";
 import { getMyDrivers } from "../api/driverApi";
@@ -191,9 +192,9 @@ function mergeLocations(
 
 export default function LiveLocationPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   const mapRef = useRef<MapRef | null>(null);
+  const historySectionRef = useRef<HTMLElement | null>(null);
   const initialFitDone = useRef(false);
   const loadRequestRef = useRef(0);
   const socketTimesRef = useRef<Record<string, number>>({});
@@ -628,8 +629,8 @@ export default function LiveLocationPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className="mx-auto max-w-400 p-4 lg:p-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <main className="mx-auto max-w-full p-2 lg:p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-black text-[#07393C]">
                 {t("supervisor.liveMap", "Live Map")}
@@ -772,39 +773,42 @@ export default function LiveLocationPage() {
                 </div>
 
                 {selected && (
-                  <div className="absolute inset-x-3 bottom-6 z-10 max-w-md rounded-2xl border border-[#D6DEDE] bg-white p-4 shadow-xl">
+                  <div className="absolute inset-x-3 bottom-4 z-10 max-w-md rounded-2xl border border-[#D6DEDE] bg-white/95 p-4 shadow-xl backdrop-blur-sm">
                     <div className="flex items-start gap-3">
                       <DriverAvatar
                         driver={selected.driver}
                         active={selected.isWorking && selected.fresh}
-                        size={46}
+                        size={44}
                       />
-
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-sm font-black text-[#07393C]">
-                          {selected.driver?.shortName ||
-                            selected.driver?.name ||
-                            "Driver"}
+                          {selected.driver?.shortName || selected.driver?.name || "Driver"}
                         </h3>
-                        <p className="text-xs text-[#667577]">
+                        {selected.driver?.shortName && selected.driver?.name && (
+                          <p className="truncate text-[11px] text-[#667577]">
+                            {selected.driver.name}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-[#667577]">
                           {selected.driver?.phone || "-"}
                         </p>
                         <p className="mt-1 text-[10px] text-[#667577]">
                           {selected.isWorking ? "Working" : "Not Working"}
                           {" · "}
                           {selected.fresh ? "Fresh GPS" : "Stale GPS"}
+                          {" · "}
+                          {formatAge(selected.location.recordedAt, now)}
                         </p>
                       </div>
-
                       <button
                         type="button"
+                        aria-label="Close selected driver"
                         onClick={() => setSelectedDriverId(null)}
-                        aria-label="Close driver details"
+                        className="rounded-lg p-1.5 text-[#667577] hover:bg-[#F0EDEE]"
                       >
                         <X size={17} />
                       </button>
                     </div>
-
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <InfoBox
                         label="Latitude"
@@ -816,48 +820,33 @@ export default function LiveLocationPage() {
                       />
                       <InfoBox
                         label="Speed"
-                        value={
-                          selected.location.speed != null
-                            ? `${Math.max(0, Number(selected.location.speed) * 3.6).toFixed(0)} km/h`
-                            : "-"
-                        }
+                        value={selected.location.speed != null
+                          ? `${Math.max(0, Number(selected.location.speed) * 3.6).toFixed(0)} km/h`
+                          : "-"}
                       />
                       <InfoBox
                         label="Accuracy"
-                        value={
-                          selected.location.accuracy != null
-                            ? `${Math.round(Number(selected.location.accuracy))} m`
-                            : "-"
-                        }
+                        value={selected.location.accuracy != null
+                          ? `${Math.round(Number(selected.location.accuracy))} m`
+                          : "-"}
                       />
                     </div>
-
-                    <p className="mt-3 text-[10px] text-[#667577]">
-                      Last GPS: {formatAge(selected.location.recordedAt, now)}
-                    </p>
-
-                    {getDriverId(selected.location) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/drivers/${getDriverId(selected.location)}`,
-                          )
-                        }
-                        className="mt-3 w-full rounded-lg bg-[#07393C] py-2 text-xs font-bold text-white"
-                      >
-                        {t("drivers.viewDriver", "View Driver")}
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => historySectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      })}
+                      className="mt-3 w-full rounded-lg bg-[#07393C] py-2.5 text-xs font-bold text-white hover:bg-[#2C666E]"
+                    >
+                      {t("orders.history", "View Order History")}
+                    </button>
                   </div>
                 )}
               </div>
 
               <aside className="flex min-h-0 flex-col border-t border-[#D6DEDE] xl:border-s xl:border-t-0">
                 <div className="border-b border-[#EDF0F0] p-4">
-                  <h3 className="text-sm font-black text-[#07393C]">
-                    {t("supervisor.drivers", "Drivers")}
-                  </h3>
 
                   <div className="relative mt-3">
                     <Search
@@ -883,7 +872,7 @@ export default function LiveLocationPage() {
                         key={id}
                         type="button"
                         onClick={() => selectDriver(item)}
-                        className={`flex w-full items-center gap-3 border-b border-[#EDF0F0] p-4 text-start hover:bg-[#F8FAFA] ${
+                        className={`flex w-full items-center gap-3 border-b border-[#EDF0F0] p-1 text-start hover:bg-[#F8FAFA] ${
                           selectedDriverId === id ? "bg-[#F0F7F7]" : ""
                         }`}
                       >
@@ -899,14 +888,12 @@ export default function LiveLocationPage() {
                               item.driver?.name ||
                               "Driver"}
                           </div>
-
+                        <div className="min-w-0 flex flex-row gap-3">
                           <div className="mt-1 flex items-center gap-1 text-[10px] text-[#667577]">
                             <Phone size={11} />
                             {item.driver?.phone || "-"}
                           </div>
 
-                          <div className="mt-1 text-[10px] text-[#667577]">
-                            {formatAge(item.location.recordedAt, now)}
                           </div>
                         </div>
 
@@ -926,6 +913,46 @@ export default function LiveLocationPage() {
                   )}
                 </div>
               </aside>
+            </section>
+          )}
+
+          {/* Reusable order history for the selected map driver. */}
+          {selected && selectedDriverId && (
+            <section
+              ref={historySectionRef}
+              aria-label={t("orders.history", "Order History")}
+              className="mt-6 scroll-mt-5 rounded-2xl border border-[#D6DEDE] bg-white p-4 shadow-sm sm:p-6"
+            >
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#EDF0F0] pb-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <DriverAvatar
+                    driver={selected.driver}
+                    active={selected.isWorking && selected.fresh}
+                    size={44}
+                  />
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-black text-[#07393C]">
+                      {selected.driver?.shortName || selected.driver?.name || "Driver"}
+                    </h2>
+                    <p className="text-xs text-[#667577]">
+                      {t("orders.history", "Order History")}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDriverId(null)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#D6DEDE] px-3 py-2 text-xs font-bold text-[#07393C] hover:bg-[#F0EDEE]"
+                >
+                  <X size={15} />
+                  {t("common.close", "Close")}
+                </button>
+              </div>
+              <DriverOrderHistory
+                key={selectedDriverId}
+                driverId={selectedDriverId}
+                pageSize={10}
+              />
             </section>
           )}
         </main>
