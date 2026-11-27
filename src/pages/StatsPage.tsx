@@ -292,7 +292,7 @@ export default function StatsPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className="mx-auto max-w-[1600px] p-5 lg:p-8">
+        <main className="mx-auto max-w-full p-2 lg:p-4">
           {/* =========================
               PAGE HEADER
           ========================= */}
