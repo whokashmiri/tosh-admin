@@ -3,6 +3,7 @@ import {
   Car,
   Pencil,
   PersonStanding,
+  Phone,
 } from "lucide-react";
 
 import type {
@@ -30,7 +31,7 @@ export function DriverRow({
     "working";
 
   return (
-    <div className="flex flex-col gap-4 px-5 py-4 transition hover:bg-[#FAFBFB] lg:flex-row lg:items-center">
+    <div className="flex flex-col gap-4 px-2 transition hover:bg-[#FAFBFB] lg:flex-row lg:items-center">
       <div className="flex min-w-0 flex-1 items-center gap-4">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-[#D6DEDE] bg-[#F0EDEE]">
           {driver.profilePicture
@@ -62,16 +63,23 @@ export function DriverRow({
             {driver.shortName ||
               driver.name}
           </div>
-
+<div className="min-w-0 flex flex-row gap-3">
           {driver.shortName && (
             <div className="mt-0.5 truncate text-xs text-[#667577]">
               {driver.name}
             </div>
           )}
 
-          <div className="mt-1 text-xs text-[#8A989A]">
-            {driver.phone ||
+<div className="mt-1 text-xs text-[#8A989A] flex flex-row gap-3.5 ">
+          
+            <Phone size={15}/>
+            <h1>
+ {driver.phone ||
               driver.iqamaId}
+            </h1>
+           
+          
+          </div>
           </div>
         </div>
       </div>
