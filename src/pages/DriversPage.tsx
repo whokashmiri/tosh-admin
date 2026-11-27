@@ -238,8 +238,8 @@ export default function DriversPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className="mx-auto max-w-375 p-5 lg:p-8">
-          <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <main className="mx-auto max-w-full p-5 lg:p-4">
+          <div className="mb-3 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-black text-[#07393C]">
                 {t("supervisor.drivers", "Drivers")}
@@ -592,13 +592,13 @@ function DetailItem({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="min-w-0 border-b border-[#EDF0F0] py-3">
+    <div className="min-w-0 border-b border-[#EDF0F0] py-2 flex flex-row gap-3">
       <div className="flex items-center gap-2 text-xs font-semibold text-[#667577]">
         {icon}
-        {label}
+        {label} :
       </div>
 
-      <p className="mt-2 wrap-break-word text-sm font-extrabold text-[#0A090C]">
+      <p className=" wrap-break-word text-sm font-extrabold text-[#0A090C]">
         {value || "-"}
       </p>
     </div>
@@ -613,13 +613,14 @@ function SummaryCard({
   value: number;
 }) {
   return (
-    <div className="rounded-2xl border border-[#D6DEDE] bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold text-[#667577]">
-        {label}
-      </p>
+    <div className="rounded-2xl border border-[#D6DEDE] bg-white p-5 shadow-sm flex flex-row gap-3">
+     
 
-      <p className="mt-2 text-3xl font-black text-[#07393C]">
+      <p className=" text-3xl font-black text-[#07393C]">
         {value}
+      </p>
+       <p className="text-xs font-semibold text-[#667577]">
+        {label}
       </p>
     </div>
   );

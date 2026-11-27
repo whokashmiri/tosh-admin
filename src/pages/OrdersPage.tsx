@@ -433,7 +433,7 @@ export default function OrdersPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className=" max-w-full p-2 lg:p-8">
+        <main className=" max-w-full p-2 lg:p-4">
           {/* =========================
               HEADER
           ========================= */}

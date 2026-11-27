@@ -14,7 +14,7 @@ import {
   Users,
   RefreshCw,
   Plus,
-  ArrowUpRight,
+  ChevronDown,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,7 @@ import {
 import { DashboardSidebar } from "../components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { StatCard } from "../components/dashboard/StatCard";
+import { DriverOrderHistory } from "../components/drivers/DriverOrderHistory";
 
 import type { Driver } from "../types/driver";
 
@@ -99,6 +100,7 @@ export default function DashboardPage() {
     useState<SupervisorDashboardStatsResponse | null>(null);
 
   const [filter, setFilter] = useState<DriverFilter>("all");
+  const [expandedDriverId, setExpandedDriverId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -203,8 +205,8 @@ export default function DashboardPage() {
       <div className="lg:pl-64">
         <DashboardHeader />
 
-        <main className="mx-auto max-w-375 p-4 lg:p-8">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+        <main className="mx-auto max-w-full p-2 lg:p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-black text-[#07393C]">
                 {t("supervisor.dashboard", "Dashboard")}
@@ -349,20 +351,31 @@ export default function DashboardPage() {
 
                 <div className="max-h-150 divide-y divide-[#EDF0F0] overflow-y-auto">
                   {visibleDrivers.length ? (
-                    visibleDrivers.map((item) => (
-                      <DriverRow
-                        key={item.driver._id ?? item.driver.id}
-                        item={item}
-                        onClick={() => {
-                          const id =
-                            item.driver._id ?? item.driver.id;
+                    visibleDrivers.map((item) => {
+                      const id = item.driver._id ?? item.driver.id;
+                      const expanded = !!id && expandedDriverId === id;
 
-                          if (id) {
-                            navigate(`/dashboard/drivers/${id}`);
-                          }
-                        }}
-                      />
-                    ))
+                      return (
+                        <div key={id}>
+                          <DriverRow
+                            item={item}
+                            expanded={expanded}
+                            onClick={() => {
+                              if (!id) return;
+                              setExpandedDriverId((current) =>
+                                current === id ? null : id,
+                              );
+                            }}
+                          />
+
+                          {expanded && id && (
+                            <div className="bg-[#F8FAFA] px-5 pb-4">
+                              <DriverOrderHistory driverId={id} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="p-10 text-center text-sm text-[#667577]">
                       {t(
@@ -477,9 +490,11 @@ function FilterCard({
 
 function DriverRow({
   item,
+  expanded,
   onClick,
 }: {
   item: DashboardDriver;
+  expanded: boolean;
   onClick: () => void;
 }) {
   const { t } = useTranslation();
@@ -489,7 +504,11 @@ function DriverRow({
     <button
       type="button"
       onClick={onClick}
-      className="block w-full px-5 py-3 text-start transition hover:bg-[#F8FAFA]"
+      aria-expanded={expanded}
+      className={[
+        "block w-full px-5 py-3 text-start transition hover:bg-[#F8FAFA]",
+        expanded ? "bg-[#F8FAFA]" : "",
+      ].join(" ")}
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 lg:flex-nowrap">
         {/* Left: identity */}
@@ -513,9 +532,12 @@ function DriverRow({
               <span className="truncate text-sm font-extrabold text-[#0A090C]">
                 {driver.shortName || driver.name}
               </span>
-              <ArrowUpRight
-                size={13}
-                className="shrink-0 text-[#8A989A]"
+              <ChevronDown
+                size={14}
+                className={[
+                  "shrink-0 text-[#8A989A] transition-transform",
+                  expanded ? "rotate-180" : "",
+                ].join(" ")}
               />
             </div>
 
